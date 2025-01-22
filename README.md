@@ -1,5 +1,9 @@
 # **Denoising Facial Emotion Dataset Using Attention U-Net and GAN**
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Rv-XS27X-YDUu4Vv7jss0tn06V3qKEp0?usp=sharing)  
+[![Python](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/release/python-380/)  
+[![Status](https://img.shields.io/badge/status-active-green)]()
+
 ## **Introduction**
 
 Welcome to an exciting journey into the world of deep learning and image restoration! 🎉 In this project, we dive into the challenge of denoising grayscale facial images, taking on various levels of noise that can obscure the rich emotional expressions captured in the data. Leveraging cutting-edge architectures like **Attention U-Net** and **GANs (Generative Adversarial Networks)**, we aim to breathe life back into noisy images and showcase the power of modern neural networks. 
