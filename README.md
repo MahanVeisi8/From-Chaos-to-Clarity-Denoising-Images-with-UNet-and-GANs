@@ -53,7 +53,7 @@ To study the denoising effects systematically, we introduced **three distinct ty
 ![Low Gaussian Noise](assets/LowGaussianNoise.png)
 
 #### Gaussian Noise (High)
-![High Gaussian Noise](assets/HighGaussianNoise)
+![High Gaussian Noise](assets/HighGaussianNoise.png)
 
 #### Salt-and-Pepper Noise
-![Salt-and-Pepper Noise](assets/Salt-and-PepperNoise)
+![Salt-and-Pepper Noise](assets/Salt-and-PepperNoise.png)
