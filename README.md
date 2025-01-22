@@ -142,13 +142,13 @@ The Attention U-Net was trained using a carefully designed configuration:
 
 ### **2. PatchGAN**
 
-The **PatchGAN** discriminator introduces a **Generative Adversarial Network (GAN)** structure. It evaluates denoised outputs on a **patch level**, ensuring both global consistency and local accuracy.
+The **PatchGAN** framework combines the power of a generator (Attention U-Net) and a discriminator to refine the denoising process. The generator produces denoised outputs, while the discriminator evaluates their authenticity by focusing on both global structure and local detail. This dynamic adversarial training ensures that the denoised images are visually realistic and contextually accurate.
 
 #### **Generator**
-The generator directly reuses the **Attention U-Net**, leveraging its attention mechanisms for precise denoising.
+The **Attention U-Net**, discussed earlier, serves as the generator in this setup. Its attention mechanisms allow it to focus on noise-free regions of the input, ensuring high-quality reconstruction of the denoised output.
 
 #### **Discriminator**
-The discriminator evaluates the denoised image by dividing it into smaller patches and assigning a **real** or **fake** score to each patch.
+The discriminator, **PatchGANDiscriminator**, takes the denoised output from the generator and evaluates it against the ground truth (clean image). It does this by processing pairs of noisy-clean images or noisy-generated images and assessing their "realness" at a patch level.
 
 ```python
 class PatchGANDiscriminator(nn.Module):
@@ -157,50 +157,67 @@ class PatchGANDiscriminator(nn.Module):
         self.debug = debug
         self.use_fc = use_fc
         self.global_pooling = global_pooling
-
         # Encoder layers
         self.enc1 = EncoderBlock(in_channels, base_channels, use_attention=True, stride=stride[0], padding=padding[0], debug=debug)
         self.enc2 = EncoderBlock(base_channels, base_channels * 2, use_attention=False, stride=stride[1], padding=padding[1], debug=debug)
         self.enc3 = EncoderBlock(base_channels * 2, base_channels * 4, use_attention=True, stride=stride[2], padding=padding[2], debug=debug)
         # Final convolution
         self.final_conv = nn.Conv2d(base_channels * 2, 1, kernel_size=2, stride=stride[5], padding=padding[5])
-
         # Fully connected layers
         if self.use_fc:
             self.fc_dim = 12 * 12
             self.fc = nn.Sequential(
-                nn.Linear(base_channels * 2, self.fc_dim), 
-                nn.Tanh(),
+                # nn.Linear(base_channels * 8 * (22 * 22), self.fc_dim),
+                nn.Linear(base_channels * 2, self.fc_dim),
+                nn.Tanh(),  # Activation function
                 nn.Linear(self.fc_dim, self.fc_dim),
                 nn.Tanh()
             )
+
+    def forward(self, x, y):
+        combined = torch.cat([x, y], dim=1) 
+        # Encoder forward pass
+        features, downsampled = self.enc1(combined)
+        features, downsampled = self.enc2(downsampled)
+        features, downsampled = self.enc3(downsampled)
+        out = self.final_conv(features)  # Shape: (B, 1, H', W')
+        if self.use_fc:
+            batch_size, channels, height, width = features.shape
+            if self.global_pooling:
+                pooled_features = torch.mean(features, dim=[2, 3]) 
+                flattened = pooled_features.view(batch_size, -1)
+            else:
+                flattened = features.view(batch_size, -1) 
+            fc_out = self.fc(flattened)  
+            out = fc_out.view(batch_size, 1, height, width)
+        return out
+
 ```
 
-1. **Inputs**:
-   - The discriminator takes two inputs:
-     - **Noisy Image** (real or generated).
-     - **Clean Image** (ground truth or generated).
+The discriminator operates on **two inputs**, concatenated channel-wise:  
+1. A noisy image (real or generated).  
+2. A clean image (ground truth or generated).  
 
-   These are concatenated channel-wise for evaluation.
+By processing these inputs through its encoder layers, the discriminator outputs a matrix of **patch-based predictions**, where each score corresponds to the "realness" of a patch in the image.
 
-2. **Patch-Level Predictions**:
-   - Using encoder blocks, the discriminator extracts features and downsamples the input.
-   - The final layer outputs patch-based predictions, where each patch represents the discriminator’s confidence in the denoised region.
+To stabilize training, **label smoothing** is applied:  
+- Real patches are labeled as **0.9**, preventing the discriminator from becoming overly confident.  
+- Fake patches are labeled as **0.1**, encouraging the generator to refine its outputs.
 
-3. **Label Smoothing**:
-   - For stability, **real patches** are labeled as **0.9**, and **fake patches** as **0.1**, instead of the traditional binary values (1 and 0).
+---
+
+The training process involves a careful balance between the generator and discriminator. The **generator loss** combines two objectives:  
+1. **Reconstruction loss (L2)**: Ensures pixel-level accuracy by minimizing the difference between the denoised output and the clean image.  
+2. **Adversarial loss**: Encourages the generator to produce images that the discriminator classifies as "real".  
+
+The **discriminator loss** evaluates how effectively the discriminator distinguishes between real and fake patches. It combines the binary cross-entropy losses for real and fake predictions.
 
 ```python
-def forward(self, x, y):
-    combined = torch.cat([x, y], dim=1)
-    features, _ = self.enc1(combined)
-    features, _ = self.enc2(features)
-    out = self.final_conv(features)  # Patch-based output
-    return out
+gen_loss = l2_loss + 0.001 * adversarial_loss
+disc_loss = (real_loss + fake_loss) / 2
 ```
 
-#### **Key Features**
-- **Patch-Based Output**: Ensures spatial consistency in the denoised image.
-- **Attention Mechanism**: Selectively refines feature extraction in the discriminator.
-- **Label Smoothing**: Encourages stable adversarial training by avoiding overly confident predictions.
+Training is optimized using Adam for both generator and discriminator, with a learning rate of `1e-3`. A **ReduceLROnPlateau** scheduler is used to dynamically adjust the learning rate when validation loss plateaus, ensuring better generalization.  
+
+This combination of patch-based evaluation, adversarial loss, and careful optimization results in a robust denoising process, capable of producing visually coherent and contextually accurate outputs.
 
