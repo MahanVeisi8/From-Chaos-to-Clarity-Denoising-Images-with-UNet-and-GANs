@@ -75,21 +75,19 @@ The Attention U-Net is divided into four main components:
 class AttentionUNet(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, use_attention=True, debug=False):
         super(AttentionUNet, self).__init__()
+        self.debug = debug
         # Encoder
         self.enc1 = EncoderBlock(in_channels, 16)
         self.enc2 = EncoderBlock(16, 32)
         self.enc3 = EncoderBlock(32, 64)
         self.enc4 = EncoderBlock(64, 128)
-
         # Bottleneck
         self.bottleneck = ConvBlock(128, 256)
-
         # Decoder
         self.dec4 = DecoderBlock(256, 128, use_attention=use_attention, debug=debug)
         self.dec3 = DecoderBlock(128, 64, use_attention=use_attention, debug=debug)
         self.dec2 = DecoderBlock(64, 32, use_attention=use_attention, debug=debug)
         self.dec1 = DecoderBlock(32, 16, use_attention=False, debug=debug)
-
         # Final Output
         self.final_conv = nn.Conv2d(16, out_channels, kernel_size=1)
 ```
@@ -100,10 +98,12 @@ class AttentionUNet(nn.Module):
    
 ```python
 class EncoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, use_attention=False):
+    def __init__(self, in_channels, out_channels, use_attention=False, stride=2, padding=0, debug=False):
+        super(EncoderBlock, self).__init__()
         self.conv = ConvBlock(in_channels, out_channels)
-        self.pool = nn.MaxPool2d(kernel_size=2)
-        self.attention = AttentionBlock(out_channels, out_channels, out_channels) if use_attention else None
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=stride, padding=padding)
+        if use_attention:
+            self.attention = AttentionBlock(out_channels, out_channels, out_channels)
 ```
 
 2. **Bottleneck**: 
@@ -116,10 +116,12 @@ class EncoderBlock(nn.Module):
 
 ```python
 class DecoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, use_attention=False):
+    def __init__(self, in_channels, out_channels, use_attention=False, debug=False):
+        super(DecoderBlock, self).__init__()
         self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
-        self.conv = ConvBlock(out_channels * 2, out_channels)  # Concatenate with skip connections
-        self.attention = AttentionBlock(out_channels, out_channels, out_channels) if use_attention else None
+        self.conv = ConvBlock(out_channels * 2, out_channels)
+        if use_attention:
+            self.attention = AttentionBlock(out_channels, out_channels, out_channels)
 ```
 
 4. **Output Layer**:
@@ -144,11 +146,29 @@ The discriminator evaluates the denoised image by dividing it into smaller patch
 
 ```python
 class PatchGANDiscriminator(nn.Module):
-    def __init__(self, in_channels=2, base_channels=32):
+    def __init__(self, in_channels=2, base_channels=32, stride=[2, 2, 2, 2, 2, 2], padding=[0, 0, 0, 0, 0, 0], use_fc=False, global_pooling=False, debug=False):
         super(PatchGANDiscriminator, self).__init__()
-        self.enc1 = EncoderBlock(in_channels, base_channels, use_attention=True)
-        self.enc2 = EncoderBlock(base_channels, base_channels * 2)
-        self.final_conv = nn.Conv2d(base_channels * 2, 1, kernel_size=2)
+        self.debug = debug
+        self.use_fc = use_fc
+        self.global_pooling = global_pooling
+
+        # Encoder layers
+        self.enc1 = EncoderBlock(in_channels, base_channels, use_attention=True, stride=stride[0], padding=padding[0], debug=debug)
+        self.enc2 = EncoderBlock(base_channels, base_channels * 2, use_attention=False, stride=stride[1], padding=padding[1], debug=debug)
+        self.enc3 = EncoderBlock(base_channels * 2, base_channels * 4, use_attention=True, stride=stride[2], padding=padding[2], debug=debug)
+        # Final convolution
+        self.final_conv = nn.Conv2d(base_channels * 2, 1, kernel_size=2, stride=stride[5], padding=padding[5])
+
+        # Fully connected layers
+        if self.use_fc:
+            self.fc_dim = 12 * 12
+            self.fc = nn.Sequential(
+                # nn.Linear(base_channels * 8 * (22 * 22), self.fc_dim), 
+                nn.Linear(base_channels * 2, self.fc_dim), 
+                nn.Tanh(),
+                nn.Linear(self.fc_dim, self.fc_dim),
+                nn.Tanh()
+            )
 ```
 
 1. **Inputs**:
