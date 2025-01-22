@@ -221,3 +221,36 @@ Training is optimized using Adam for both generator and discriminator, with a le
 
 This combination of patch-based evaluation, adversarial loss, and careful optimization results in a robust denoising process, capable of producing visually coherent and contextually accurate outputs.
 
+
+## Task 1: Denoising Low Gaussian Noise
+
+In this task, we focus on denoising grayscale images with **low Gaussian noise**, which mimics mild real-world distortions. Both the **Attention U-Net** and **PatchGAN** models were trained and evaluated for this purpose. Below, we present the denoised results and analyze the performance of the models.
+
+### **Reconstruction Results**
+
+#### Attention U-Net
+The **Attention U-Net** showed impressive performance in denoising low Gaussian noise. Below are some reconstructed samples:
+![T1_UNET_Denoised](assets/task1/unet_sample.png)
+
+#### PatchGAN
+The **PatchGAN** model was also tested, and while it produced satisfactory outputs, the **Attention U-Net** was more consistent in metrics. Here are some results from the PatchGAN model:
+![T1_GAN_Denoised](assets/task1/GAN_sample.png) 
+
+
+---
+
+### **Performance Metrics**
+
+The evaluation was conducted on the **test set**, and the results for both models are summarized below:
+
+| Model         | Loss   | PSNR    | SSIM    | Explanation                                                                                                                                          |
+|---------------|--------|---------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Attention U-Net | 0.0039 | 30.1480 | 0.9593 | In low-noise scenarios, Attention U-Net excels due to its focused attention mechanisms, achieving high fidelity and structural similarity.            |
+| PatchGAN       | 0.0064 | 21.9678 | 0.9221 | The PatchGAN struggled slightly due to its reliance on adversarial training, which can overemphasize visual realism over quantitative accuracy.       |
+
+---
+
+### **Summary**
+
+The **Attention U-Net** emerged as the superior model for denoising low Gaussian noise, with significantly better metrics across **Loss**, **PSNR**, and **SSIM**. While the **PatchGAN** demonstrated the ability to produce visually coherent outputs, its performance metrics fell short in comparison, highlighting the strengths of attention-based mechanisms for subtle noise reduction.
+
