@@ -69,7 +69,7 @@ This project explores two powerful architectures for image denoising: **Attentio
 The **Attention U-Net** builds upon the classic U-Net architecture by incorporating **attention mechanisms**, enabling the model to focus on relevant regions of the input dynamically. This enhancement ensures effective noise suppression while preserving essential structural and contextual features, making it highly suitable for image denoising tasks.
 
 #### **Architecture**
-The Attention U-Net is divided into some components:
+The Attention U-Net is divided into four components:
 
 ```python
 class AttentionUNet(nn.Module):
@@ -125,7 +125,7 @@ class DecoderBlock(nn.Module):
 ```
 
 4. **Output Layer**:
-   - A single convolutional layer reduces the feature map to the target image dimensions, reconstructing the output to match the original image size (e.g., \(1 \times 48 \times 48\)).
+   - A single convolutional layer reduces the feature map to the target image dimensions, reconstructing the output to match the original image size (1 * 48 * 48).
 
 ---
 
