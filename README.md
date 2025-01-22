@@ -281,6 +281,34 @@ The evaluation was conducted on the **test set**, and the comparative results fo
 
 The results indicate that while both models experience a decline in performance due to the increased noise severity, the **Attention U-Net** consistently outperforms the **PatchGAN**. The challenges posed by high Gaussian noise emphasize the need for refined GAN architectures for better denoising outcomes.
 
+## Task 3: Denoising Salt-and-Pepper Noise
+
+Expanding the exploration further, this task addresses **salt-and-pepper noise**, a common form of impulse noise. While traditional methods like median filtering are effective for such noise, we assess the potential of deep learning models, specifically **Attention U-Net**, to achieve competitive denoising results.
+
+---
+
+### **Reconstruction Results**
+
+#### Attention U-Net
+The **Attention U-Net** performed remarkably well, effectively restoring images corrupted by salt-and-pepper noise. Below are the denoised results from the Attention U-Net:
+![T3_UNET_Denoised](assets/task3/unet_sample.png)
+
+---
+
+### **Performance Metrics**
+
+The results on the **test set** for the Attention U-Net are summarized below:
+
+| Model           | Loss   | PSNR    | SSIM    | Explanation                                                                                                                                                    |
+|------------------|--------|---------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Attention U-Net | 0.0037 | 30.3950 | 0.9774  | The model demonstrated strong capabilities in handling impulse noise, achieving high fidelity and structural similarity, comparable to classical filtering methods. |
+
+---
+
+### **Insights and Future Work**
+
+While salt-and-pepper noise is traditionally managed through simple filtering techniques, this task highlights the potential of neural networks like the Attention U-Net for broader denoising challenges. However, the **GAN model** did not achieve satisfactory results in this task, likely due to the sparse and abrupt nature of the noise. Future work could explore specialized architectures or pre-processing techniques to enhance GAN performance on impulse noise.
+
 
 
 
