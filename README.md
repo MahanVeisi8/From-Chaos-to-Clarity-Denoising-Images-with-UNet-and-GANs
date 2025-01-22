@@ -250,7 +250,37 @@ The evaluation was conducted on the **test set**, and the results for both model
 
 ---
 
-### **Summary**
+## Task 2: Denoising High Gaussian Noise
 
-The **Attention U-Net** emerged as the superior model for denoising low Gaussian noise, with significantly better metrics across **Loss**, **PSNR**, and **SSIM**. While the **PatchGAN** demonstrated the ability to produce visually coherent outputs, its performance metrics fell short in comparison, highlighting the strengths of attention-based mechanisms for subtle noise reduction.
+In the second task, we tackle denoising grayscale images corrupted with **high Gaussian noise**, simulating more severe real-world distortions. The models, **Attention U-Net** and **PatchGAN**, were further trained on this task to evaluate their ability to reconstruct heavily corrupted images.
+
+---
+
+### **Reconstruction Results**
+
+#### Attention U-Net
+The **Attention U-Net** adapted well to the high Gaussian noise, leveraging its attention mechanisms to focus on key areas of the image. Here are some sample reconstructions:
+![T2_UNET_Denoised](assets/task2/unet_sample.png)
+
+#### PatchGAN
+The **PatchGAN** model showed modest improvements but struggled with the intensity of the noise. Below are some generated outputs:
+![T2_GAN_Denoised](assets/task2/gan_sample.png)
+
+---
+
+### **Performance Metrics**
+
+The evaluation was conducted on the **test set**, and the comparative results for both models are summarized in the table below:
+
+| Model           | Loss   | PSNR    | SSIM    | Explanation                                                                                                                                                   |
+|------------------|--------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Attention U-Net | 0.0161 | 23.9465 | 0.8720  | The U-Net demonstrates its robustness in handling high noise levels, although the task complexity caused a drop in metrics compared to Task 1.               |
+| PatchGAN        | 0.0270 | 15.6816 | 0.7745  | PatchGAN exhibited limitations in resolving fine details under severe noise conditions. A less complex GAN structure might yield more competitive results.    |
+
+---
+
+The results indicate that while both models experience a decline in performance due to the increased noise severity, the **Attention U-Net** consistently outperforms the **PatchGAN**. The challenges posed by high Gaussian noise emphasize the need for refined GAN architectures for better denoising outcomes.
+
+
+
 
