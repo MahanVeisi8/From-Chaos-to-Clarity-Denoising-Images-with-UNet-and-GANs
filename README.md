@@ -335,6 +335,8 @@ The **test set** results for salt-and-pepper noise are summarized below:
 ### **Insights and Future Directions**
 
 Salt-and-pepper noise is traditionally managed using simple filtering techniques like the **median filter**, which is computationally efficient and effective:
+
+
 ![T3_Median_Filter](assets/task3/median.jpg)
 
 
