@@ -66,10 +66,10 @@ This project explores two powerful architectures for image denoising: **Attentio
 
 ### **1. Attention U-Net**
 
-The **Attention U-Net** extends the classic U-Net architecture by incorporating **attention mechanisms**. This addition allows the model to dynamically focus on important regions of the input, ensuring noise is suppressed while key features are preserved.
+The **Attention U-Net** builds upon the classic U-Net architecture by incorporating **attention mechanisms**, enabling the model to focus on relevant regions of the input dynamically. This enhancement ensures effective noise suppression while preserving essential structural and contextual features, making it highly suitable for image denoising tasks.
 
 #### **Architecture**
-The Attention U-Net is divided into four main components:
+The Attention U-Net is divided into some components:
 
 ```python
 class AttentionUNet(nn.Module):
@@ -94,8 +94,8 @@ class AttentionUNet(nn.Module):
 
 1. **Encoder**: 
    - Each `EncoderBlock` consists of convolutional layers for feature extraction and max-pooling for downsampling.
-   - Optional **attention modules** refine features by learning spatial focus based on context.
-   
+   - Optional **attention modules** refine features by focusing on spatially important regions based on the input context.
+
 ```python
 class EncoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, use_attention=False, stride=2, padding=0, debug=False):
@@ -107,12 +107,12 @@ class EncoderBlock(nn.Module):
 ```
 
 2. **Bottleneck**: 
-   - A dense `ConvBlock` connects the encoder and decoder, capturing global context.
+   - A dense `ConvBlock` bridges the encoder and decoder, aggregating global context to capture high-level features.
 
 3. **Decoder**:
-   - Each `DecoderBlock` upsamples the feature maps using transposed convolutions.
-   - Skip connections combine lower-level details from the encoder.
-   - Attention mechanisms prioritize important features while discarding noise.
+   - Each `DecoderBlock` upsamples the feature maps using transposed convolutions, enabling reconstruction at higher resolutions.
+   - Skip connections integrate fine-grained details from the encoder for precise restoration.
+   - Attention mechanisms selectively refine the reconstructed features, helping prioritize meaningful information.
 
 ```python
 class DecoderBlock(nn.Module):
@@ -125,12 +125,18 @@ class DecoderBlock(nn.Module):
 ```
 
 4. **Output Layer**:
-   - A single convolution reduces the final feature map to the target image dimensions.
+   - A single convolutional layer reduces the feature map to the target image dimensions, reconstructing the output to match the original image size (e.g., \(1 \times 48 \times 48\)).
 
-#### **Key Features**
-- **Attention Mechanism**: Selectively focuses on noise-free regions of the input.
-- **Skip Connections**: Combines encoder and decoder features, improving reconstruction fidelity.
-- **Customizable Debugging**: Print intermediate shapes for analysis.
+---
+
+#### **Training Highlights**
+The Attention U-Net was trained using a carefully designed configuration:
+
+- **Loss Function**: Mean Squared Error (MSE) ensures pixel-wise consistency between the denoised output and the clean ground truth. This choice balances simplicity and effectiveness for grayscale image restoration.
+  
+- **Optimization**:
+  - **Optimizer**: Adam optimizer with an initial learning rate of `1e-3` ensures fast convergence.
+  - **Scheduler**: A ReduceLROnPlateau scheduler dynamically lowers the learning rate when validation loss stagnates, preventing overfitting and improving generalization.
 
 ---
 
@@ -163,7 +169,6 @@ class PatchGANDiscriminator(nn.Module):
         if self.use_fc:
             self.fc_dim = 12 * 12
             self.fc = nn.Sequential(
-                # nn.Linear(base_channels * 8 * (22 * 22), self.fc_dim), 
                 nn.Linear(base_channels * 2, self.fc_dim), 
                 nn.Tanh(),
                 nn.Linear(self.fc_dim, self.fc_dim),
@@ -199,8 +204,3 @@ def forward(self, x, y):
 - **Attention Mechanism**: Selectively refines feature extraction in the discriminator.
 - **Label Smoothing**: Encourages stable adversarial training by avoiding overly confident predictions.
 
----
-
-These models form the backbone of this denoising framework. Their synergy ensures effective restoration of noisy images, with the **Attention U-Net** excelling in reconstruction and the **PatchGAN** ensuring quality and consistency. 
-
-Let me know when you're ready to discuss their **loss functions** and **training configurations**!
