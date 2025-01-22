@@ -307,7 +307,10 @@ The results on the **test set** for the Attention U-Net are summarized below:
 
 ### **Insights and Future Work**
 
-While salt-and-pepper noise is traditionally managed through simple filtering techniques, this task highlights the potential of neural networks like the Attention U-Net for broader denoising challenges. However, the **GAN model** did not achieve satisfactory results in this task, likely due to the sparse and abrupt nature of the noise. Future work could explore specialized architectures or pre-processing techniques to enhance GAN performance on impulse noise.
+While salt-and-pepper noise is traditionally managed through simple filtering techniques:
+![T3_UNET_Denoised](assets/task3/median.jpg)
+
+this task highlights the potential of neural networks like the Attention U-Net for broader denoising challenges. However, the **GAN model** did not achieve satisfactory results in this task, likely due to the sparse and abrupt nature of the noise. Future work could explore specialized architectures or pre-processing techniques to enhance GAN performance on impulse noise.
 
 
 
