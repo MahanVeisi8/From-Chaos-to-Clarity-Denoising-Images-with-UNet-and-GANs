@@ -57,3 +57,130 @@ To study the denoising effects systematically, we introduced **three distinct ty
 
 #### Salt-and-Pepper Noise
 ![Salt-and-Pepper Noise](assets/Salt-and-PepperNoise.png)
+
+### **Models Overview**
+
+This project explores two powerful architectures for image denoising: **Attention U-Net** and **PatchGAN**. These models are specifically tailored to handle noisy grayscale facial images, enabling effective restoration of visual features. Below is a detailed explanation of their structure and design choices, supported by code.
+
+---
+
+### **1. Attention U-Net**
+
+The **Attention U-Net** extends the classic U-Net architecture by incorporating **attention mechanisms**. This addition allows the model to dynamically focus on important regions of the input, ensuring noise is suppressed while key features are preserved.
+
+#### **Architecture**
+The Attention U-Net is divided into four main components:
+
+```python
+class AttentionUNet(nn.Module):
+    def __init__(self, in_channels=1, out_channels=1, use_attention=True, debug=False):
+        super(AttentionUNet, self).__init__()
+        # Encoder
+        self.enc1 = EncoderBlock(in_channels, 16)
+        self.enc2 = EncoderBlock(16, 32)
+        self.enc3 = EncoderBlock(32, 64)
+        self.enc4 = EncoderBlock(64, 128)
+
+        # Bottleneck
+        self.bottleneck = ConvBlock(128, 256)
+
+        # Decoder
+        self.dec4 = DecoderBlock(256, 128, use_attention=use_attention, debug=debug)
+        self.dec3 = DecoderBlock(128, 64, use_attention=use_attention, debug=debug)
+        self.dec2 = DecoderBlock(64, 32, use_attention=use_attention, debug=debug)
+        self.dec1 = DecoderBlock(32, 16, use_attention=False, debug=debug)
+
+        # Final Output
+        self.final_conv = nn.Conv2d(16, out_channels, kernel_size=1)
+```
+
+1. **Encoder**: 
+   - Each `EncoderBlock` consists of convolutional layers for feature extraction and max-pooling for downsampling.
+   - Optional **attention modules** refine features by learning spatial focus based on context.
+   
+```python
+class EncoderBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, use_attention=False):
+        self.conv = ConvBlock(in_channels, out_channels)
+        self.pool = nn.MaxPool2d(kernel_size=2)
+        self.attention = AttentionBlock(out_channels, out_channels, out_channels) if use_attention else None
+```
+
+2. **Bottleneck**: 
+   - A dense `ConvBlock` connects the encoder and decoder, capturing global context.
+
+3. **Decoder**:
+   - Each `DecoderBlock` upsamples the feature maps using transposed convolutions.
+   - Skip connections combine lower-level details from the encoder.
+   - Attention mechanisms prioritize important features while discarding noise.
+
+```python
+class DecoderBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, use_attention=False):
+        self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
+        self.conv = ConvBlock(out_channels * 2, out_channels)  # Concatenate with skip connections
+        self.attention = AttentionBlock(out_channels, out_channels, out_channels) if use_attention else None
+```
+
+4. **Output Layer**:
+   - A single convolution reduces the final feature map to the target image dimensions.
+
+#### **Key Features**
+- **Attention Mechanism**: Selectively focuses on noise-free regions of the input.
+- **Skip Connections**: Combines encoder and decoder features, improving reconstruction fidelity.
+- **Customizable Debugging**: Print intermediate shapes for analysis.
+
+---
+
+### **2. PatchGAN**
+
+The **PatchGAN** discriminator introduces a **Generative Adversarial Network (GAN)** structure. It evaluates denoised outputs on a **patch level**, ensuring both global consistency and local accuracy.
+
+#### **Generator**
+The generator directly reuses the **Attention U-Net**, leveraging its attention mechanisms for precise denoising.
+
+#### **Discriminator**
+The discriminator evaluates the denoised image by dividing it into smaller patches and assigning a **real** or **fake** score to each patch.
+
+```python
+class PatchGANDiscriminator(nn.Module):
+    def __init__(self, in_channels=2, base_channels=32):
+        super(PatchGANDiscriminator, self).__init__()
+        self.enc1 = EncoderBlock(in_channels, base_channels, use_attention=True)
+        self.enc2 = EncoderBlock(base_channels, base_channels * 2)
+        self.final_conv = nn.Conv2d(base_channels * 2, 1, kernel_size=2)
+```
+
+1. **Inputs**:
+   - The discriminator takes two inputs:
+     - **Noisy Image** (real or generated).
+     - **Clean Image** (ground truth or generated).
+
+   These are concatenated channel-wise for evaluation.
+
+2. **Patch-Level Predictions**:
+   - Using encoder blocks, the discriminator extracts features and downsamples the input.
+   - The final layer outputs patch-based predictions, where each patch represents the discriminator’s confidence in the denoised region.
+
+3. **Label Smoothing**:
+   - For stability, **real patches** are labeled as **0.9**, and **fake patches** as **0.1**, instead of the traditional binary values (1 and 0).
+
+```python
+def forward(self, x, y):
+    combined = torch.cat([x, y], dim=1)
+    features, _ = self.enc1(combined)
+    features, _ = self.enc2(features)
+    out = self.final_conv(features)  # Patch-based output
+    return out
+```
+
+#### **Key Features**
+- **Patch-Based Output**: Ensures spatial consistency in the denoised image.
+- **Attention Mechanism**: Selectively refines feature extraction in the discriminator.
+- **Label Smoothing**: Encourages stable adversarial training by avoiding overly confident predictions.
+
+---
+
+These models form the backbone of this denoising framework. Their synergy ensures effective restoration of noisy images, with the **Attention U-Net** excelling in reconstruction and the **PatchGAN** ensuring quality and consistency. 
+
+Let me know when you're ready to discuss their **loss functions** and **training configurations**!
