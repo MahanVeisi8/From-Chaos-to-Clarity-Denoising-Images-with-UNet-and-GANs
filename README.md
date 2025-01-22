@@ -336,7 +336,9 @@ The **test set** results for salt-and-pepper noise are summarized below:
 
 Salt-and-pepper noise is traditionally managed using simple filtering techniques like the **median filter**, which is computationally efficient and effective:
 ![T3_Median_Filter](assets/task3/median.jpg)
-Image took from ![this aricle](https://www.futurelearn.com/info/courses/introduction-to-image-analysis-for-plant-phenotyping/0/steps/297750)
+
+
+Image took from [this aricle](https://www.futurelearn.com/info/courses/introduction-to-image-analysis-for-plant-phenotyping/0/steps/297750)
 
 However, the **Attention U-Net** showed that deep learning models can match or even exceed classical methods, especially when integrated into larger pipelines. On the other hand, the **GAN model** struggled with this task, underscoring the need for specialized architectures or pre-processing steps for sparse, abrupt noise patterns. Future work could focus on:
 - Designing **hybrid approaches** combining deep learning with classical filtering for optimal performance.
