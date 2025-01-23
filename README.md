@@ -183,7 +183,6 @@ class PatchGANDiscriminator(nn.Module):
         if self.use_fc:
             self.fc_dim = 12 * 12
             self.fc = nn.Sequential(
-                # nn.Linear(base_channels * 8 * (22 * 22), self.fc_dim),
                 nn.Linear(base_channels * 2, self.fc_dim),
                 nn.Tanh(),  # Activation function
                 nn.Linear(self.fc_dim, self.fc_dim),
